@@ -73,26 +73,26 @@
 
     # ---
     # START config firewalld
-#    - name: Config Firewalld allow 'http' protocol
-#      firewalld:
-#        service: http
-#        permanent: yes
-#        state: enabled
-#      notify: Restart Firewalld
-#
-#    - name: Config Firewalld allow 'ssh' protocol
-#      firewalld:
-#        service: ssh
-#        permanent: yes
-#        state: enabled
-#      notify: Restart Firewalld
-#
-#    - name: Config Firewalld allow 'https' protocol
-#      firewalld:
-#        service: https
-#        permanent: yes
-#        state: enabled
-#      notify: Restart Firewalld
+    - name: Config Firewalld allow 'http' protocol
+      ansible.posix.firewalld:
+        service: http
+        permanent: yes
+        state: enabled
+      notify: Restart Firewalld
+
+    - name: Config Firewalld allow 'ssh' protocol
+      ansible.posix.firewalld:
+        service: ssh
+        permanent: yes
+        state: enabled
+      notify: Restart Firewalld
+
+    - name: Config Firewalld allow 'https' protocol
+      ansible.posix.firewalld:
+        service: https
+        permanent: yes
+        state: enabled
+      notify: Restart Firewalld
     # END config firewalld
 
   # ---
