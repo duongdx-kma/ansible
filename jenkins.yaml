@@ -1,0 +1,69 @@
+- name: Jenkins
+  hosts: ci_cd_server
+  become: yes
+  become_user: root
+  tasks:
+  # START Jenkins configuration
+  - name: yum update
+    yum:
+      name: '*'
+      state: latest
+
+  - name: Add the jenkins repo
+    get_url:
+      url: https://pkg.jenkins.io/redhat-stable/jenkins.repo
+      dest: /etc/yum.repos.d/jenkins.repo
+
+  - name: import a key file from jenkins-ci
+    rpm_key:
+      state: present
+      key: https://pkg.jenkins.io/redhat/jenkins.io-2023.key
+
+  - name: yum update
+    yum:
+      name: '*'
+      state: latest
+
+  - name: Install package
+    yum:
+      name:
+        - fontconfig
+        - java-17-openjdk
+        - jenkins
+        # - postgres
+        - firewalld
+      state: present
+
+  - name: Start jenkins
+    service:
+      name: jenkins
+      state: started
+      enabled: yes
+  # END Jenkins configuration
+
+  # ---
+  # START firewalld configuration
+  - name: Start firewalld
+    service:
+      name: firewalld
+      state: started
+      enabled: yes
+
+  - name: allow traffic on port 8080
+    ansible.posix.firewalld:
+      port: 8080/tcp
+      permanent: true
+      state: enabled
+    notify: Restart Firewalld
+  # END firewalld configuration
+
+  handlers:
+  - name: Restart Firewalld
+    service:
+      name: firewalld
+      state: restarted
+
+  - name: Restart Jenkins
+    service:
+      name: jenkins
+      state: restarted

@@ -1,0 +1,102 @@
+- name: Mysql configuration
+  hosts: db_server
+  become: yes
+  tasks:
+  # Start mysql configuration
+  - name: delete mariadb libs
+    yum:
+      name: mariadb-libs
+      state: removed
+
+  - name: Install mysql
+    yum:
+      name:
+        - mysql-server-8.0.26
+        - python3-mysqlclient
+      state: present
+
+  - name: start and enable mysql service
+    service:
+      name: mysqld
+      state: started
+      enabled: yes
+
+  - name: Creating checking file
+    file:
+      path: /tmp/check_change_root_password
+      state: touch
+      mode: 0755
+      modification_time: preserve
+      access_time: preserve
+
+  - name: check change root password or not ?
+    shell: grep -Fxq "yes" /tmp/check_change_root_password || echo "not change"
+    register: check_change_passwd
+
+  - name: Debug - check include config
+    debug:
+      msg: "{{ check_change_passwd }}"
+
+  - name: Set root user password
+    mysql_user:
+      name: root
+      password: "{{ db_root_password }}"
+      host: localhost
+      login_user: root
+      login_password: ""
+      state: present
+    when: check_change_passwd.stdout == "not change"
+
+  - name: insert value checking
+    lineinfile:
+      path: /tmp/check_change_root_password
+      line: "yes"
+    when: check_change_passwd.stdout == "not change"
+
+  - name: Ensure MySQL users are present.
+    mysql_user:
+      login_user: 'root'
+      login_password: '{{ db_root_password }}'
+      name: '{{ db_username }}'
+      host: "{{ db_user_host | default('localhost') }}"
+      password: "{{ db_user_password }}"
+      priv: "{{ db_user_priv | default('*.*:USAGE') }}"
+      state: "present"
+      append_privs: "no"
+      encrypted: "no"
+    no_log: true
+
+  - name: Create database
+    mysql_db:
+      name: "{{ db_database }}"
+      state: present
+      login_user: root
+      login_password: "{{ db_root_password }}"
+  # END mysql configuration
+
+  # ---
+  # START firewalld configuration
+  - name: Install firewalld
+    yum:
+      name: firewalld
+      state: present
+  - name: Config Firewalld allow 'mysql' protocol
+    firewalld:
+      service: mysql
+      permanent: yes
+      state: enabled
+    notify: Restart Firewalld
+  # END firewalld configuration
+
+  # ---
+  # handlers - handler will be triggered when config change
+  handlers:
+  - name: Restart Firewalld
+    service:
+      name: firewalld
+      state: restarted
+
+  - name: Restart mysql
+    service:
+      name: mysqld
+      state: restarted

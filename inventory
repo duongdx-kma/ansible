@@ -1,22 +1,30 @@
 all:
-  host:
-    ec2_test:
-      ansible_host: 10.0.0.1
-    ec2_db:
-      ansible_host: 10.0.0.2
+  hosts:
+    web_instance:
+      ansible_host: 192.168.56.79
+    ci_cd_instance:
+      ansible_host: 192.168.56.89
+    db_instance:
+      ansible_host: 192.168.56.81
 
-  # definition group
   children:
     web_server:
       hosts:
-        ec2_test
+        web_instance
+
+    ci_cd_server:
+      hosts:
+        ci_cd_instance
+
     db_server:
       hosts:
-        ec2_db
+        db_instance
+
     mix_group:
       children:
-        web_servers:
-        db_servers:
+        web_server:
+        ci_cd_server:
+        db_server:
       vars:
         ansible_user: devops
-        ansible_ssh_private_key_file: clientkey.pem
+        ansible_ssh_private_key_file: client.pem

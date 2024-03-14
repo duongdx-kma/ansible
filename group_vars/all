@@ -1,0 +1,17 @@
+env: dev
+domain_name: duongdx.com
+
+db_driver: mysql
+db_host: 192.168.56.81
+db_port: 3306
+db_database: "testing_db"
+db_username: duongdx
+db_user_host: "%"
+db_user_password: duongdx
+db_user_priv: "*.*:ALL,GRANT"
+db_root_password: "rootpassword"
+
+jwt_secret_key: 12345679abc
+app_port: 8080
+app_env: dev
+
