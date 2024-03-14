@@ -3,7 +3,7 @@
   become: yes
   tasks:
     - name: Install package
-      yum:
+      dnf:
         name:
           - httpd
           - firewalld

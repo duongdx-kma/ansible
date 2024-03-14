@@ -1,0 +1,26 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('fetching code') {
+            steps {
+                git branch: 'testing_amazon_linux', url: 'https://github.com/duongdx-kma/ansible'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                echo 'Build step: no build'
+                sh '''
+                    echo "$BUILD_ID"
+                '''
+            }
+        }
+
+        stage('Execute ansible playbook') {
+            steps {
+                ansiblePlaybook credentialsId: 'jenkins-ansible', disableHostKeyChecking: true, installation: 'Ansible', inventory: 'inventory', playbook: 'web-server-playbook.yaml', vaultTmpPath: ''
+            }
+        }
+    }
+}
