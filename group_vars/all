@@ -1,8 +1,10 @@
 env: dev
 domain_name: duongdx.com
+git_repo: git@github.com:duongdx-kma/golang-project.git
+project_src: /src/golang-app
 
 db_driver: mysql
-db_host: 192.168.56.81
+db_host: database
 db_port: 3306
 db_database: "testing_db"
 db_username: duongdx
@@ -12,6 +14,5 @@ db_user_priv: "*.*:ALL,GRANT"
 db_root_password: "rootpassword"
 
 jwt_secret_key: 12345679abc
-app_port: 8080
+app_port: 8088
 app_env: dev
-

@@ -5,11 +5,15 @@
     - name: Install package
       yum:
         name:
+          - yum-utils
+          - git
+          - vim
           - httpd
           - firewalld
+          - mod_ssl
         state: present
 
-    # START config httpd
+    # START httpd configuration
     - name: Start httpd
       service:
         name: httpd
@@ -48,6 +52,21 @@
         src: templates/apache.conf
         dest: "/etc/httpd/sites-available/{{ domain_name }}.conf"
         backup: yes
+      notify: Restart Apache
+
+    - name: check insert include configure or not ?
+      shell: grep -Fxq "ServerName 127.0.0.1" /etc/httpd/conf/httpd.conf || echo "no match"
+      register: check_config_local
+
+    - name: Debug - check include config local
+      debug:
+        msg: "{{ check_config_local }}"
+
+    - name: insert configure local
+      lineinfile:
+        path: /etc/httpd/conf/httpd.conf
+        line: "ServerName 127.0.0.1"
+      when: check_config_local.stdout == "no match"
 
     - name: check insert include configure or not ?
       shell: grep -Fxq "IncludeOptional sites-enabled/*.conf" /etc/httpd/conf/httpd.conf || echo "no match"
@@ -69,10 +88,10 @@
         dest: "/etc/httpd/sites-enabled/{{ domain_name }}.conf"
         state: link
       notify: Restart Apache
-    # END config httpd
+    # END httpd configuration
 
     # ---
-    # START config firewalld
+    # START firewalld configuration
     - name: Config Firewalld allow 'http' protocol
       firewalld:
         service: http
@@ -93,7 +112,85 @@
         permanent: yes
         state: enabled
       notify: Restart Firewalld
-    # END config firewalld
+
+    - name: Config Firewalld allow 'mysql' protocol
+      firewalld:
+        service: mysql
+        permanent: yes
+        state: enabled
+      notify: Restart Firewalld
+
+    - name: Config Firewalld allow '8080' tcp
+      firewalld:
+        port: "{{ app_port }}/tcp"
+        permanent: yes
+        state: enabled
+      notify: Restart Firewalld
+
+    - name: Config Firewalld allow '9000' tcp / portainer
+      firewalld:
+        port: "9000/tcp"
+        permanent: yes
+        state: enabled
+      notify: Restart Firewalld
+    # END firewalld configuration
+
+    # ---
+    # Start docker configuration
+    - name: Remove docker if installed from CentOS repo
+      yum:
+        name:
+          - docker
+          - docker-client
+          - docker-client-latest
+          - docker-common
+          - docker-latest
+          - docker-latest-logrotate
+          - docker-logrotate
+          - docker-engine
+        state: absent
+
+    - name: Add Docker repo
+      get_url:
+        url: https://download.docker.com/linux/centos/docker-ce.repo
+        dest: /etc/yum.repos.d/docer-ce.repo
+
+    - name: Enable Docker Edge repo
+      ini_file:
+        dest: /etc/yum.repos.d/docer-ce.repo
+        section: 'docker-ce-edge'
+        option: enabled
+        value: 0
+
+    - name: Enable Docker Test repo
+      ini_file:
+        dest: /etc/yum.repos.d/docer-ce.repo
+        section: 'docker-ce-test'
+        option: enabled
+        value: 0
+
+    - name: Install package
+      yum:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-buildx-plugin
+          - docker-compose-plugin
+        state: present
+
+    - name: Start Docker service
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: adding existing user '{{ ansible_user }}' to group docker
+      user:
+        name: '{{ ansible_user }}'
+        groups: docker
+        append: yes
+    # End docker configuration
 
   # ---
   # handlers - handler will be triggered when config change
@@ -106,4 +203,9 @@
   - name: Restart Apache
     service:
       name: httpd
+      state: restarted
+
+  - name: Restart docker
+    service:
+      name: docker
       state: restarted

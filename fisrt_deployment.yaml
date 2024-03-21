@@ -1,0 +1,34 @@
+- name: Apache web server
+  hosts: web_server
+  tasks:
+  - name: Clone of a single branch
+    ansible.builtin.git:
+      repo: "{{ git_repo }}"
+      dest: "{{ project_src }}"
+      single_branch: yes
+      version: duongdx-golang
+      key_file: "/home/{{ ansible_user }}/.ssh/id_rsa"
+      accept_hostkey: yes
+      update: yes
+
+  - name: Passing env file to server
+    template:
+      src: templates/.env
+      dest: "{{ project_src }}/.env"
+
+  - name: install prerequisite
+    become: true
+    pip:
+      name:
+        - docker>=1.8.0
+        - PyYAML>=3.11
+        - docker-compose>=1.7.0
+      state: present
+
+  - name: Deploy Docker Compose stack
+    docker_compose:
+      project_src: "{{ project_src }}"
+      files:
+        - docker-compose.yml
+      build: yes
+      state: present
