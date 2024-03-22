@@ -1,4 +1,4 @@
-- name: Apache web server
+- name: web server
   hosts: web_server
   become: yes
   tasks:
@@ -8,87 +8,8 @@
           - yum-utils
           - git
           - vim
-          - httpd
           - firewalld
-          - mod_ssl
         state: present
-
-    # START httpd configuration
-    - name: Start httpd
-      service:
-        name: httpd
-        state: started
-        enabled: yes
-
-    - name: Create resources directory
-      file:
-        path: "/var/www/{{ domain_name }}"
-        state: directory
-        owner: "{{ ansible_user }}"
-        group: "{{ ansible_user }}"
-        mode: 0775
-
-    - name: Passing code to server
-      copy:
-        backup: true
-        src: code/
-        dest: "/var/www/{{ domain_name }}"
-
-    - name: Passing env file to server
-      template:
-        src: templates/.env
-        dest: "/var/www/{{ domain_name }}/.env"
-
-    - name: Create config directory
-      file:
-          path: "{{ item }}"
-          state: directory
-      loop:
-        - /etc/httpd/sites-available
-        - /etc/httpd/sites-enabled
-
-    - name: copy file with template CentOS
-      template:
-        src: templates/apache.conf
-        dest: "/etc/httpd/sites-available/{{ domain_name }}.conf"
-        backup: yes
-      notify: Restart Apache
-
-    - name: check insert include configure or not ?
-      shell: grep -Fxq "ServerName 127.0.0.1" /etc/httpd/conf/httpd.conf || echo "no match"
-      register: check_config_local
-
-    - name: Debug - check include config local
-      debug:
-        msg: "{{ check_config_local }}"
-
-    - name: insert configure local
-      lineinfile:
-        path: /etc/httpd/conf/httpd.conf
-        line: "ServerName 127.0.0.1"
-      when: check_config_local.stdout == "no match"
-
-    - name: check insert include configure or not ?
-      shell: grep -Fxq "IncludeOptional sites-enabled/*.conf" /etc/httpd/conf/httpd.conf || echo "no match"
-      register: check_config
-
-    - name: Debug - check include config
-      debug:
-        msg: "{{ check_config }}"
-
-    - name: insert configure
-      lineinfile:
-        path: /etc/httpd/conf/httpd.conf
-        line: "IncludeOptional sites-enabled/*.conf"
-      when: check_config.stdout == "no match"
-
-    - name: Create symbolic link
-      file:
-        src: "/etc/httpd/sites-available/{{ domain_name }}.conf"
-        dest: "/etc/httpd/sites-enabled/{{ domain_name }}.conf"
-        state: link
-      notify: Restart Apache
-    # END httpd configuration
 
     # ---
     # START firewalld configuration
@@ -198,11 +119,6 @@
   - name: Restart Firewalld
     service:
       name: firewalld
-      state: restarted
-
-  - name: Restart Apache
-    service:
-      name: httpd
       state: restarted
 
   - name: Restart docker

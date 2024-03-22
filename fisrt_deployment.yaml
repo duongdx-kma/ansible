@@ -1,4 +1,4 @@
-- name: Apache web server
+- name: Deploy web server
   hosts: web_server
   tasks:
   - name: Clone of a single branch
@@ -6,7 +6,7 @@
       repo: "{{ git_repo }}"
       dest: "{{ project_src }}"
       single_branch: yes
-      version: duongdx-golang
+      version: "{{ git_branch }}"
       key_file: "/home/{{ ansible_user }}/.ssh/id_rsa"
       accept_hostkey: yes
       update: yes

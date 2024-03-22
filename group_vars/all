@@ -1,7 +1,8 @@
 env: dev
 domain_name: duongdx.com
 git_repo: git@github.com:duongdx-kma/golang-project.git
-project_src: /src/golang-app
+project_src: /home/devops/golang-app
+git_branch: duongdx-golang
 
 db_driver: mysql
 db_host: database
