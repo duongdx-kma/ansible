@@ -1,30 +1,16 @@
 all:
   hosts:
     web_instance:
-      ansible_host: 192.168.56.79
-    ci_cd_instance:
-      ansible_host: 192.168.56.89
-    db_instance:
-      ansible_host: 192.168.56.81
+      ansible_host: 192.168.56.66
 
   children:
     web_server:
       hosts:
         web_instance
 
-    ci_cd_server:
-      hosts:
-        ci_cd_instance
-
-    db_server:
-      hosts:
-        db_instance
-
     mix_group:
       children:
         web_server:
-        ci_cd_server:
-        db_server:
       vars:
         ansible_user: devops
         ansible_ssh_private_key_file: client.pem

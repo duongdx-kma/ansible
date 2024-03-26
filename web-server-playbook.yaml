@@ -11,6 +11,14 @@
           - firewalld
         state: present
 
+    - name: passing pem key
+      ansible.builtin.copy:
+        src: client.pem
+        dest: /home/{{ ansible_user}}/.ssh/id_rsa
+        mode: 0400
+        owner: "{{ ansible_user}}"
+        group: "{{ ansible_user}}"
+
     # ---
     # START firewalld configuration
     - name: Config Firewalld allow 'http' protocol
@@ -41,16 +49,30 @@
         state: enabled
       notify: Restart Firewalld
 
-    - name: Config Firewalld allow '8080' tcp
+    - name: Config Firewalld allow '{{ app_port }}' tcp
       firewalld:
         port: "{{ app_port }}/tcp"
         permanent: yes
         state: enabled
       notify: Restart Firewalld
 
-    - name: Config Firewalld allow '9000' tcp / portainer
+    - name: Config Firewalld allow {{ portainer_port }} tcp / portainer
       firewalld:
-        port: "9000/tcp"
+        port: "{{ portainer_port }}/tcp"
+        permanent: yes
+        state: enabled
+      notify: Restart Firewalld
+
+    - name: Config Firewalld allow '{{ minio_port }}' tcp / minio
+      firewalld:
+        port: "{{ minio_port }}/tcp"
+        permanent: yes
+        state: enabled
+      notify: Restart Firewalld
+
+    - name: Config Firewalld allow '{{ minio_console_port }}' tcp / minio-console
+      firewalld:
+        port: "{{ minio_console_port }}/tcp"
         permanent: yes
         state: enabled
       notify: Restart Firewalld

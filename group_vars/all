@@ -17,3 +17,10 @@ db_root_password: "rootpassword"
 jwt_secret_key: 12345679abc
 app_port: 8088
 app_env: dev
+
+portainer_port: 9090
+
+minio_root_user: minio_user
+minio_root_password: password
+minio_port: 9000
+minio_console_port: 9001
